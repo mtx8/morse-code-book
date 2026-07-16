@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hearing the Code — A Complete Guide to Morse</title>
+<style>
+:root{
+  --bg:#0d1311;            /* deep ink, faint teal */
+  --bg-raised:#131c19;     /* panels */
+  --bg-inset:#0a0f0d;      /* wells / reference */
+  --ink:#ece6d6;           /* warm paper text */
+  --ink-soft:#a7afa5;      /* secondary */
+  --ink-faint:#707a71;     /* captions */
+  --signal:#f0a830;        /* brass/amber — the one accent: dits, dahs, actions */
+  --signal-dim:#c88a2a;
+  --live:#4fd6c4;          /* electric teal — "on air / playing" only */
+  --danger:#ff5b4d;        /* SOS / distress */
+  --rule:rgba(236,230,214,.12);
+  --rule-strong:rgba(236,230,214,.22);
+  --gap:0.42rem;           /* one timing unit, visually */
+  --dot:0.5rem;
+  --dah:1.5rem;            /* 3× dot */
+  --serif:Georgia,'Iberian','Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'SF Mono','SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace;
+  --maxw:44rem;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--serif);font-size:1.075rem;line-height:1.72;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+/* subtle "wire" texture behind everything */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(240,168,48,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(79,214,196,.045), transparent 60%);
+}
+main,header.bar,footer{position:relative;z-index:1}
+
+/* ---------- sticky control bar ---------- */
+header.bar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,15,13,.86);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--rule);
+}
+.bar-in{
+  max-width:72rem;margin:0 auto;padding:.55rem 1rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.82rem;letter-spacing:.02em}
+.brand .logo{display:inline-flex;align-items:center;gap:.28rem}
+.brand .logo i{background:var(--signal);border-radius:50%;width:.42rem;height:.42rem;display:block}
+.brand .logo i.d{width:1.15rem;border-radius:.21rem}
+.brand b{color:var(--ink);font-weight:700}
+.brand span{color:var(--ink-faint)}
+.controls{display:flex;align-items:center;gap:.9rem;margin-left:auto;flex-wrap:wrap}
+.ctl{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
+.ctl label{white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
+.ctl output{color:var(--signal);min-width:3.2ch;text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;height:2px;width:104px;background:var(--rule-strong);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:14px;width:14px;border-radius:50%;background:var(--signal);cursor:pointer;border:2px solid var(--bg);box-shadow:0 0 0 1px var(--signal-dim)}
+input[type=range]::-moz-range-thumb{height:12px;width:12px;border-radius:50%;background:var(--signal);cursor:pointer;border:2px solid var(--bg)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(240,168,48,.4)}
+.lamp{width:.8rem;height:.8rem;border-radius:50%;background:#1c2622;border:1px solid var(--rule-strong);transition:background .04s linear,box-shadow .04s linear}
+.lamp.on{background:var(--live);box-shadow:0 0 10px 2px rgba(79,214,196,.7)}
+button.stop{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-soft);background:transparent;border:1px solid var(--rule-strong);
+  padding:.32rem .6rem;border-radius:.4rem;cursor:pointer;transition:.15s
+}
+button.stop:hover{border-color:var(--danger);color:var(--danger)}
+button.stop:focus-visible{outline:2px solid var(--danger);outline-offset:2px}
+
+/* ---------- layout ---------- */
+main{max-width:var(--maxw);margin:0 auto;padding:0 1.15rem 6rem}
+section{padding-top:3.2rem}
+.hero{padding-top:3.5rem;padding-bottom:1rem}
+h1,h2,h3,h4{font-family:var(--sans);font-weight:800;line-height:1.12;letter-spacing:-.018em;color:var(--ink)}
+h1{font-size:clamp(2.4rem,7vw,3.9rem);margin:.2rem 0 .4rem}
+h2{font-size:clamp(1.7rem,4.6vw,2.35rem);margin:0 0 .7rem;padding-bottom:.5rem}
+h3{font-size:1.28rem;margin:2rem 0 .5rem;letter-spacing:-.01em}
+h4{font-size:1.02rem;margin:1.4rem 0 .35rem;font-weight:700;color:var(--signal)}
+p{margin:0 0 1.05rem}
+a{color:var(--live);text-decoration:none;border-bottom:1px solid rgba(79,214,196,.3)}
+a:hover{border-bottom-color:var(--live)}
+strong{color:#f6f0e2;font-weight:700}
+em{color:var(--ink);font-style:italic}
+.eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.28em;text-transform:uppercase;color:var(--signal-dim);margin:0 0 .9rem}
+.chapno{font-family:var(--mono);font-size:.76rem;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;display:block;margin-bottom:.35rem}
+h2 .rule{display:block}
+.h2wrap{border-bottom:1px solid var(--rule-strong);margin-bottom:1.3rem}
+.lede{font-size:1.16rem;color:var(--ink-soft);font-style:italic;margin-bottom:1.4rem}
+.small{font-size:.95rem;color:var(--ink-soft)}
+ul,ol{margin:0 0 1.1rem;padding-left:1.25rem}
+li{margin:.3rem 0}
+li::marker{color:var(--signal-dim)}
+hr{border:none;border-top:1px solid var(--rule);margin:2.4rem 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--bg-inset);padding:.08em .4em;border-radius:.3em;color:var(--signal)}
+
+/* ---------- dit/dah glyphs ---------- */
+.glyphs{display:inline-flex;align-items:center;gap:var(--gap);vertical-align:middle}
+.glyphs i{display:block;height:var(--dot);background:var(--signal);border-radius:50%;width:var(--dot)}
+.glyphs i.dah{width:var(--dah);border-radius:calc(var(--dot)/2)}
+/* inline playable morse token in prose: character or pattern */
+.m{display:inline-flex;align-items:center;gap:.5ch;cursor:pointer;background:transparent;border:none;
+   padding:.05em .35em;border-radius:.35em;transition:background .15s;vertical-align:baseline;font-family:var(--mono)}
+.m .lab{color:var(--ink);font-weight:600;font-size:.92em}
+.m:hover{background:rgba(240,168,48,.1)}
+.m:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+.m.playing,.say.playing,.cell.playing,.rowplay.playing{background:rgba(79,214,196,.14)}
+.playing .glyphs i{background:var(--signal-dim)}
+.glyphs i.lit{background:var(--live)!important;box-shadow:0 0 8px 1px rgba(79,214,196,.85);transition:background .02s linear,box-shadow .02s linear}
+
+/* ---------- reference grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.2rem,1fr));gap:.5rem;margin:1.1rem 0 1.4rem}
+.cell{background:var(--bg-raised);border:1px solid var(--rule);border-radius:.6rem;padding:.7rem .8rem;
+      cursor:pointer;text-align:left;transition:border-color .15s,transform .05s;display:flex;flex-direction:column;gap:.45rem}
+.cell:hover{border-color:var(--signal-dim)}
+.cell:active{transform:translateY(1px)}
+.cell:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.cell .top{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
+.cell .ch{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--ink);line-height:1}
+.cell .ch.over{text-decoration:overline;text-decoration-thickness:2px}
+.cell .say-txt{font-family:var(--mono);font-size:.72rem;color:var(--ink-faint);letter-spacing:.03em}
+.cell .glyphs{min-height:var(--dah)}
+.cell .mean{font-size:.86rem;color:var(--ink-soft);font-family:var(--serif);line-height:1.4}
+
+/* ---------- message / say button ---------- */
+.say{display:inline-flex;align-items:center;gap:.55rem;background:var(--bg-raised);border:1px solid var(--rule-strong);
+     border-radius:.5rem;padding:.4rem .7rem;cursor:pointer;font-family:var(--mono);font-size:.86rem;color:var(--ink);
+     transition:border-color .15s;line-height:1.3;text-align:left;max-width:100%}
+.say:hover{border-color:var(--signal-dim)}
+.say:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.say .tri{color:var(--signal);flex:none}
+.say.block{display:flex;margin:1.1rem 0}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:1.1rem 0 1.4rem;border:1px solid var(--rule);border-radius:.6rem}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.94rem}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--rule);vertical-align:top}
+thead th{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);background:var(--bg-inset)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(240,168,48,.04)}
+td.k{font-family:var(--mono);color:var(--signal);font-weight:600;white-space:nowrap}
+.rowplay{cursor:pointer;color:var(--ink-faint);font-family:var(--mono);border:1px solid var(--rule-strong);
+         border-radius:.35rem;padding:.05rem .4rem;font-size:.8rem;background:transparent;transition:.15s}
+.rowplay:hover{border-color:var(--signal-dim);color:var(--signal)}
+.rowplay:focus-visible{outline:2px solid var(--signal)}
+
+/* ---------- callout ---------- */
+.note{background:var(--bg-raised);border-left:3px solid var(--signal);border-radius:.4rem;
+      padding:.95rem 1.15rem;margin:1.4rem 0;font-size:1rem}
+.note.warn{border-left-color:var(--danger)}
+.note.live{border-left-color:var(--live)}
+.note .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--signal-dim);display:block;margin-bottom:.35rem}
+.note.warn .tag{color:var(--danger)}
+.note.live .tag{color:var(--live)}
+.note p:last-child{margin-bottom:0}
+
+/* ---------- table of contents ---------- */
+nav.toc{background:var(--bg-raised);border:1px solid var(--rule);border-radius:.8rem;padding:1.2rem 1.4rem;margin:2.2rem 0}
+nav.toc h2{font-size:1rem;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);border:none;padding:0;margin:0 0 .8rem}
+nav.toc ol{list-style:none;padding:0;margin:0;counter-reset:toc;columns:2;column-gap:2rem}
+nav.toc li{counter-increment:toc;margin:.18rem 0;break-inside:avoid}
+nav.toc a{color:var(--ink-soft);border:none;display:flex;gap:.6rem;font-family:var(--sans);font-size:.95rem}
+nav.toc a:hover{color:var(--signal)}
+nav.toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--mono);font-size:.78rem;color:var(--ink-faint);flex:none}
+@media(max-width:560px){nav.toc ol{columns:1}}
+
+/* hero listen strip */
+.listen{background:var(--bg-raised);border:1px solid var(--rule-strong);border-radius:.9rem;padding:1.3rem;margin:1.6rem 0;display:flex;flex-direction:column;gap:.9rem}
+.listen .word{display:flex;flex-wrap:wrap;gap:1.1rem}
+.listen .word .m{padding:.3rem .5rem;border:1px solid var(--rule);border-radius:.45rem}
+.listen .word .m .lab{font-size:1.05rem}
+.listen .row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.btn{font-family:var(--mono);font-size:.86rem;letter-spacing:.03em;background:var(--signal);color:#1a1206;border:none;
+     padding:.6rem 1rem;border-radius:.5rem;cursor:pointer;font-weight:700;transition:.15s;display:inline-flex;align-items:center;gap:.5rem}
+.btn:hover{background:#ffbf4d}
+.btn:focus-visible{outline:2px solid var(--live);outline-offset:2px}
+.btn.ghost{background:transparent;border:1px solid var(--rule-strong);color:var(--ink-soft)}
+.btn.ghost:hover{border-color:var(--danger);color:var(--danger);background:transparent}
+.btn.sos{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn.sos:hover{background:rgba(255,91,77,.1)}
+
+/* encode tool */
+.tool{background:var(--bg-raised);border:1px solid var(--rule-strong);border-radius:.8rem;padding:1.3rem;margin:1.4rem 0}
+.tool textarea{width:100%;background:var(--bg-inset);border:1px solid var(--rule);border-radius:.5rem;color:var(--ink);
+  font-family:var(--mono);font-size:1rem;padding:.7rem .9rem;resize:vertical;min-height:3.2rem;margin-bottom:.8rem}
+.tool textarea:focus{outline:none;border-color:var(--signal-dim)}
+.tool .preview{background:var(--bg-inset);border-radius:.5rem;padding:.9rem;margin-top:.9rem;min-height:3rem;
+  display:flex;flex-wrap:wrap;align-items:center;gap:.9rem;line-height:2.4}
+.tool .cw{display:inline-flex;flex-direction:column;align-items:center;gap:.3rem}
+.tool .cw .glyphs{min-height:var(--dah)}
+.tool .cw small{font-family:var(--mono);font-size:.7rem;color:var(--ink-faint)}
+.tool .cw.sp{width:1rem}
+.tool .cw.unk .lab{color:var(--danger)}
+
+.figcap{font-family:var(--mono);font-size:.74rem;color:var(--ink-faint);letter-spacing:.03em;margin:.4rem 0 1.4rem}
+.legend{display:flex;gap:1.6rem;flex-wrap:wrap;font-family:var(--mono);font-size:.82rem;color:var(--ink-soft);margin:.6rem 0 1.2rem}
+.legend span{display:inline-flex;align-items:center;gap:.5rem}
+
+footer{max-width:var(--maxw);margin:0 auto;padding:2.5rem 1.15rem 4rem;border-top:1px solid var(--rule);color:var(--ink-faint);font-family:var(--mono);font-size:.8rem;line-height:1.7}
+
+@media (prefers-reduced-motion: reduce){
+  *{scroll-behavior:auto!important}
+  .lamp{transition:none}
+  .m.playing,.say.playing,.cell.playing{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">
+      <span class="logo"><i></i><i class="d"></i><i></i></span>
+      <b>THE&nbsp;CODE</b><span>·&nbsp;a guide to Morse</span>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="wpm">Speed</label><input type="range" id="wpm" min="8" max="40" value="18"><output id="wpmO">18</output></div>
+      <div class="ctl"><label for="eff" title="Farnsworth: characters stay fast, gaps stretch">Farns</label><input type="range" id="eff" min="4" max="40" value="10"><output id="effO">10</output></div>
+      <div class="ctl"><label for="tone">Tone</label><input type="range" id="tone" min="400" max="900" step="10" value="600"><output id="toneO">600</output></div>
+      <span class="lamp" id="lamp" aria-hidden="true"></span>
+      <button class="stop" id="stopBtn">■ Stop</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <p class="eyebrow">International Morse Code</p>
+    <h1>Hearing the Code</h1>
+    <p class="lede">A complete, plain-language guide to reading, sending, and holding a conversation in Morse — built to be listened to, not just read.</p>
+    <p>Morse code is a language made of two sounds. Once you truly hear it — not as dots and dashes on a page, but as rhythm in your ear — it stops being a puzzle and becomes something you can speak. This book is designed around that idea. Almost everything below can be <strong>played out loud</strong>: tap any pattern, any letter, any example message, and you'll hear it at whatever speed you set in the bar above.</p>
+
+    <div class="listen">
+      <div class="word" id="heroWord"><!-- filled by JS: H E L L O --></div>
+      <div class="row">
+        <button class="btn" id="heroPlay">▶ &nbsp;Hear&nbsp;“HELLO”</button>
+        <button class="btn sos" id="heroSOS">Hear the SOS distress call</button>
+        <span class="small" style="font-family:var(--mono);font-size:.75rem">Tap any glyph to hear just that letter.</span>
+      </div>
+    </div>
+
+    <div class="legend" aria-hidden="true">
+      <span><span class="glyphs"><i></i></span> = <b style="color:var(--ink)">dit</b> (short)</span>
+      <span><span class="glyphs"><i class="dah"></i></span> = <b style="color:var(--ink)">dah</b> (long, 3× a dit)</span>
+    </div>
+
+    <nav class="toc" aria-label="Contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#ch1">What Morse Code Really Is</a></li>
+        <li><a href="#ch2">A Short History of the Dot and the Dash</a></li>
+        <li><a href="#ch3">The Alphabet</a></li>
+        <li><a href="#ch4">Numbers, Punctuation &amp; Symbols</a></li>
+        <li><a href="#ch5">The Rhythm: Timing That Makes It Language</a></li>
+        <li><a href="#ch6">How to Actually Learn It</a></li>
+        <li><a href="#ch7">Prosigns: The Control Keys of Morse</a></li>
+        <li><a href="#ch8">The Operator's Shorthand: Q-Codes, Abbreviations &amp; RST</a></li>
+        <li><a href="#ch9">Sending: Keys and Technique</a></li>
+        <li><a href="#ch10">Having a Conversation: The QSO</a></li>
+        <li><a href="#ch11">Emergencies and the Truth About SOS</a></li>
+        <li><a href="#ch12">Morse Beyond Radio</a></li>
+        <li><a href="#ch13">Your Practice Plan</a></li>
+        <li><a href="#appx">Appendix: The Complete Reference</a></li>
+      </ol>
+    </nav>
+
+    <div class="note live">
+      <span class="tag">How to use this book</span>
+      <p><strong>Set your speed first.</strong> In the bar at the top, <em>Speed</em> is how fast each character is sent (its “character speed”), and <em>Farns</em> (Farnsworth) is the slower <em>overall</em> pace — it keeps characters crisp but stretches the silence between them so a beginner's ear can keep up. A great starting point is <strong>Speed 18, Farns 8–10</strong>. <em>Tone</em> just changes the pitch of the beep. You'll understand exactly why these two speeds matter once you reach Chapter 5.</p>
+    </div>
+  </section>
+
+  <!-- ============ CH 1 ============ -->
+  <section id="ch1">
+    <div class="h2wrap"><span class="chapno">Chapter One</span><h2>What Morse Code Really Is</h2></div>
+    <p class="lede">A way to send any message using only two symbols and the silence between them.</p>
+
+    <p>Strip communication down to the barest thing that could possibly work and you arrive at Morse code. You have one channel that can be in one of two states — a light on or off, a tone present or absent, a key pressed or released — and from that single on/off distinction you can build every letter, every number, every word in the language. Morse is the oldest widely used <strong>digital</strong> code: “digital” not because of computers, but because the signal is made of discrete, countable pieces rather than a smoothly varying wave.</p>
+
+    <p>Those pieces are just two sounds of different length. A short one is called a <strong>dit</strong>. A long one — exactly three times as long — is called a <strong>dah</strong>. On paper we draw the dit as a dot <b class="m" data-p="."></b> and the dah as a dash <b class="m" data-p="-"></b>, which is why people say “dots and dashes.” But that written form is a trap for the learner, because Morse is not really made of dots and dashes. It's made of <em>sounds and silences with specific durations</em>. The letter <b class="m" data-c="R"><span class="lab">R</span></b> is not “dot-dash-dot”; it is the sound <em>di-dah-dit</em>, a little rhythmic figure you learn to recognize the way you recognize the opening notes of a familiar song.</p>
+
+    <h3>Why the codes have different lengths</h3>
+    <p>Look closely and you'll notice the code is clever about efficiency. The most common letter in English, <strong>E</strong>, is the shortest possible signal: a single dit <b class="m" data-c="E"><span class="lab">E</span></b>. The letter <strong>T</strong> is a single dah <b class="m" data-c="T"><span class="lab">T</span></b>. Rare letters like <strong>Q</strong> <b class="m" data-c="Q"><span class="lab">Q</span></b> and <strong>Y</strong> <b class="m" data-c="Y"><span class="lab">Y</span></b> get long, four-element codes. This is not an accident. When Samuel Morse and Alfred Vail designed the code in the 1830s, Vail reportedly walked into a print shop and counted how many pieces of each letter the typesetters kept in their trays — more copies meant a more common letter — and assigned the shortest codes to the letters used most. The result is a code that, on average, takes less time to send than if every letter were the same length. More than a century before Claude Shannon formalized information theory, telegraph operators had stumbled onto one of its central ideas: <strong>frequent symbols should be cheap</strong>.</p>
+
+    <div class="note">
+      <span class="tag">The core insight</span>
+      <p>Everything hard about Morse comes from trying to learn it with your eyes. Everything easy about Morse comes from learning it with your ears. Throughout this book, when you meet a new character, <strong>play it and listen</strong> before you look at the pattern. Train the sound, not the picture.</p>
+    </div>
+
+    <h3>The three things you'll actually learn</h3>
+    <p>Becoming fluent in Morse breaks cleanly into three skills, and this book takes them in order:</p>
+    <ol>
+      <li><strong>Receiving</strong> (also called “copying”) — hearing incoming Morse and knowing what it says. This is the skill that takes the most practice, and the one we build most carefully.</li>
+      <li><strong>Sending</strong> — using a key to produce clean, well-timed Morse that others can read. Easier to start, but it takes discipline to do <em>well</em>, because sloppy timing is the number-one reason operators become unreadable.</li>
+      <li><strong>Operating</strong> — the shared conventions, abbreviations, and etiquette that turn raw letters into an actual conversation between two people who may not share a spoken language.</li>
+    </ol>
+  </section>
+
+  <!-- ============ CH 2 ============ -->
+  <section id="ch2">
+    <div class="h2wrap"><span class="chapno">Chapter Two</span><h2>A Short History of the Dot and the Dash</h2></div>
+    <p class="lede">How two sounds carried the world's news for a century and a half.</p>
+
+    <p>In the 1830s, sending a message faster than a galloping horse was impossible. Then a portrait painter named <strong>Samuel F. B. Morse</strong>, working with the machinist <strong>Alfred Vail</strong> and drawing on the electromagnetic discoveries of <strong>Joseph Henry</strong>, built a system where pressing a switch on one end of a wire made an electromagnet click on the other. By turning that click on and off in patterns, you could spell out words. On May 24, 1844, Morse tapped out a message from the Supreme Court chamber in Washington to Vail in Baltimore — “What hath God wrought” — and the telegraph age began.</p>
+
+    <h3>Two Morse codes, and why one won</h3>
+    <p>The code Morse and Vail first used — now called <strong>American Morse</strong> or Railroad Morse — is not the code in this book. It was quirky: some letters contained an internal <em>pause</em> as part of the character, and a few letters used dashes of different lengths. It worked beautifully for a skilled operator clicking a sounder on a landline, but it was fragile over noisy radio and awkward internationally.</p>
+    <p>In 1848 a German named <strong>Friedrich Clemens Gerke</strong> cleaned it up, removing the internal pauses and the odd long dashes so that every character was built from just two element lengths with uniform spacing. This refined version was adopted across Europe and, after standardization by international telegraph conferences, became <strong>International Morse Code</strong> — the code used worldwide today, and the one you're learning. When radio arrived, International Morse's simplicity made it the natural survivor.</p>
+
+    <h3>Three dots that saved lives</h3>
+    <p>As ships went to sea with radios, the world needed one universal cry for help. Early on, the Marconi company used <b class="m" data-t="CQD"><span class="lab">CQD</span></b> (a general call plus “D” for distress). But in 1906 an international convention chose something simpler and impossible to mistake: <strong>SOS</strong>, sent not as three separate letters but as one unbroken stream — <b class="m" data-t="SOS" data-prosign="1"><span class="lab" style="text-decoration:overline">SOS</span></b> — <em>di-di-di-dah-dah-dah-di-di-dit</em>. Contrary to legend, it does not stand for “Save Our Souls” or “Save Our Ship”; those are memorable backronyms invented afterward. It was chosen purely because its rhythm is unmistakable even through heavy static. When the <em>Titanic</em> struck ice in 1912, her operators sent both CQD and the newer SOS.</p>
+
+    <button class="say block" data-t="SOS" data-prosign="1"><span class="tri">▶</span> Play the SOS signal — hear why it cuts through noise</button>
+
+    <h3>From the wire to the sky, and to now</h3>
+    <p>For a hundred years Morse was simply how the world communicated at a distance: railroads dispatched trains with it, newspapers filed stories with it, navies and armies ran on it, and ships kept a listening watch on the maritime distress frequency of 500 kHz. That era formally closed in <strong>1999</strong>, when the international maritime service switched to satellite-based systems and the last commercial coast stations fell silent.</p>
+    <p>But Morse did not die — it moved. Today you'll find it in three living places:</p>
+    <ul>
+      <li><strong>Amateur (“ham”) radio</strong>, where Morse — known on the air as <strong>CW</strong>, for “continuous wave” — remains one of the most popular and effective modes. A CW signal is so narrow and simple that it gets through when voice cannot: weak-signal, long-distance contacts that would be impossible any other way. Passing a Morse test is no longer required for a license (the U.S. dropped that requirement in 2007), yet hundreds of thousands of operators use it every day by choice.</li>
+      <li><strong>Aviation navigation</strong>, where ground beacons (VORs and NDBs) still identify themselves by transmitting their two- or three-letter Morse identifier. Pilots confirm they've tuned the right station by listening for its code.</li>
+      <li><strong>Accessibility and ingenuity</strong> — people with severe motor impairments communicate through Morse using a single switch, a puff of breath, or even an eye blink, because Morse needs only one reliable on/off action to express anything at all.</li>
+    </ul>
+  </section>
+
+  <!-- ============ CH 3 ============ -->
+  <section id="ch3">
+    <div class="h2wrap"><span class="chapno">Chapter Three</span><h2>The Alphabet</h2></div>
+    <p class="lede">Twenty-six sounds. Listen to each one before you look at it.</p>
+
+    <p>Here is the full International Morse alphabet. Every cell is a button — tap it to hear the letter at your current speed, and read the little <em>di-dah</em> spelling underneath, which is how operators say each character out loud. Notice the visual glyphs show the real proportions: a dit is a dot, a dah is a bar three times as wide, and the gaps between them are the true silences. <strong>Resist the urge to memorize the picture.</strong> Play the sound, say the rhythm, and let your ear do the learning. Chapter 6 explains the fastest way to commit these to memory; for now, just explore and listen.</p>
+
+    <div class="grid" id="grid-letters" aria-label="Morse alphabet A to Z"></div>
+
+    <h3>Patterns that help the sounds stick</h3>
+    <p>A few families make natural sense once you hear them:</p>
+    <ul>
+      <li><strong>The single elements:</strong> <b class="m" data-c="E"><span class="lab">E</span></b> is one dit, <b class="m" data-c="T"><span class="lab">T</span></b> is one dah. The two atoms of the whole language.</li>
+      <li><strong>The mirror pairs:</strong> <b class="m" data-c="A"><span class="lab">A</span></b> (<em>di-dah</em>) and <b class="m" data-c="N"><span class="lab">N</span></b> (<em>dah-dit</em>) are reflections of each other; so are <b class="m" data-c="D"><span class="lab">D</span></b> and <b class="m" data-c="U"><span class="lab">U</span></b>, and <b class="m" data-c="G"><span class="lab">G</span></b> and <b class="m" data-c="W"><span class="lab">W</span></b>. Hearing one helps you hear its opposite.</li>
+      <li><strong>The run-ups:</strong> <b class="m" data-c="E"><span class="lab">E</span></b>, <b class="m" data-c="I"><span class="lab">I</span></b>, <b class="m" data-c="S"><span class="lab">S</span></b>, <b class="m" data-c="H"><span class="lab">H</span></b> are one, two, three, and four dits — a rising staircase of taps.</li>
+      <li><strong>The long calls:</strong> <b class="m" data-c="O"><span class="lab">O</span></b> is three solid dahs — the most “open,” resonant letter, which is exactly why it forms the middle of SOS.</li>
+    </ul>
+
+    <div class="note warn">
+      <span class="tag">A warning about mnemonics</span>
+      <p>You'll find “memory tricks” online — word associations, and a branching “dichotomic tree” you read top-down to decode a letter. They feel helpful and they will slow you down for years. Any method that makes you <em>translate</em> (“dah-dit… that's N… wait, was it?”) builds a mental lookup step between the sound and the meaning. Fluency means <em>no lookup</em>: the sound <em>di-dah-dit</em> simply <strong>is</strong> R, the way the word “dog” simply is a dog. We'll build that direct reflex in Chapter 6.</p>
+    </div>
+  </section>
+
+  <!-- ============ CH 4 ============ -->
+  <section id="ch4">
+    <div class="h2wrap"><span class="chapno">Chapter Four</span><h2>Numbers, Punctuation &amp; Symbols</h2></div>
+    <p class="lede">A tidy system for the digits, and the marks you'll actually use.</p>
+
+    <h3>The numerals 0–9</h3>
+    <p>The numbers are the most logical part of Morse. Each is exactly five elements long, and they sweep from all-dits to all-dahs in a beautiful pattern: <strong>1</strong> is one dit then four dahs; <strong>2</strong> is two dits then three dahs; and so on until <strong>5</strong> is five dits and <strong>0</strong> is five dahs. Learn the shape of the sweep and you barely have to memorize them individually.</p>
+    <div class="grid" id="grid-numbers" aria-label="Morse numerals 0 to 9"></div>
+
+    <div class="note">
+      <span class="tag">On the air</span>
+      <p>Because five-element numbers take a while to send, operators often use <strong>“cut numbers”</strong> — shortened forms borrowed from letters — especially for signal reports. The most common: <b class="m" data-c="T"><span class="lab">T</span></b> stands in for <strong>0</strong>, <b class="m" data-c="N"><span class="lab">N</span></b> for <strong>9</strong>, and <b class="m" data-c="A"><span class="lab">A</span></b> for <strong>1</strong>. So a perfect report of “599” is frequently sent as <b class="m" data-t="5NN"><span class="lab">5NN</span></b>. Learn the real numbers first; pick up cut numbers later once your ear is quick.</p>
+    </div>
+
+    <h3>Punctuation and symbols</h3>
+    <p>You need only a handful of these to communicate well. The four you'll use constantly are the period, comma, question mark, and slash. The rest are here for completeness. Tap any to hear it.</p>
+    <div class="grid" id="grid-punct" aria-label="Morse punctuation and symbols"></div>
+    <p class="small">Note that several symbols share a rhythm with a “prosign” (a procedure signal) — for example the equals sign <b class="m" data-p="-...-"></b> is also the operator's signal <strong>BT</strong> for a pause between thoughts, and the plus sign <b class="m" data-p=".-.-."></b> doubles as <strong>AR</strong>, “end of message.” Chapter 7 covers these.</p>
+  </section>
+
+  <!-- ============ CH 5 ============ -->
+  <section id="ch5">
+    <div class="h2wrap"><span class="chapno">Chapter Five</span><h2>The Rhythm: Timing That Makes It Language</h2></div>
+    <p class="lede">Morse isn't dots and dashes. It's durations — and getting them right is everything.</p>
+
+    <p>This is the most important chapter in the book, because timing is what separates readable Morse from noise. Everything in Morse is measured in one basic unit of time. Call it a “unit.” Once you fix that unit, five rules define the entire language:</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Element</th><th>Length</th><th>What it is</th></tr></thead>
+        <tbody>
+          <tr><td class="k">dit</td><td>1 unit of sound</td><td>the short beep</td></tr>
+          <tr><td class="k">dah</td><td>3 units of sound</td><td>the long beep — exactly 3× a dit</td></tr>
+          <tr><td class="k">gap inside a letter</td><td>1 unit of silence</td><td>between the dits &amp; dahs of one character</td></tr>
+          <tr><td class="k">gap between letters</td><td>3 units of silence</td><td>the space that separates one letter from the next</td></tr>
+          <tr><td class="k">gap between words</td><td>7 units of silence</td><td>the pause that separates whole words</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>That's the whole grammar of Morse timing. A dah is three dits long; the silence <em>within</em> a letter is one dit long; the silence <em>between</em> letters is three; and the silence <em>between</em> words is seven. If you get these proportions right, you are readable at any speed. If you get them wrong — running letters together, or leaving ragged gaps — even slow, carefully formed characters become gibberish.</p>
+
+    <div class="note live">
+      <span class="tag">Hear the spacing yourself</span>
+      <p>Play the word below and listen for the <em>three</em> layers of silence: the tiny gaps inside each letter, the longer gaps between letters, and the long gap before the next word. This is the single most useful thing to internalize in all of Morse.</p>
+      <p><button class="say" data-t="A DOG"><span class="tri">▶</span> A &nbsp; D O G</button></p>
+    </div>
+
+    <h3>How speed is measured: PARIS and “words per minute”</h3>
+    <p>Morse speed is given in <strong>words per minute (WPM)</strong>, but a “word” needs a fixed definition or the number is meaningless. By universal convention the standard word is <strong>PARIS</strong> — chosen because its mix of letters and spaces adds up to exactly <strong>50 units</strong> including the space that follows it. So “20 WPM” means you could send the word PARIS twenty times in one minute. From that single fact comes a tidy formula:</p>
+    <p style="text-align:center;font-family:var(--mono);color:var(--signal);font-size:1.05rem">one dit = 1200 ÷ (WPM) milliseconds</p>
+    <p>At 20 WPM a dit is 60 milliseconds; at 12 WPM it's 100 ms; at 40 WPM it's a snappy 30 ms. You never need to do this math — the sliders at the top do it for you — but it explains what “speed” physically means: faster WPM simply squeezes the same unit of time shorter.</p>
+
+    <h3>The learner's secret weapon: Farnsworth timing</h3>
+    <p>Here is the problem every beginner hits. If you learn Morse <em>slowly</em> — say at 5 WPM — each character is stretched so long that you learn to count its dits and dahs one by one. Then when you try to speed up, you hit a wall around 10 WPM, because your brain is counting, and counting can't keep up. Learners who start slow often have to <em>unlearn</em> everything to get faster.</p>
+    <p>The fix, developed by the ARRL and named after Russ Farnsworth, is brilliant: send each <strong>character at a fast speed</strong> — fast enough that you must hear it as a single rhythmic shape rather than count it — but insert <strong>extra silence between characters</strong> so the overall pace stays slow and comfortable. You get the best of both: your ear learns the true, fast “sound” of each letter from day one, while the generous gaps give you time to recognize it and write it down.</p>
+    <p>That's exactly what the two sliders in the top bar do. <strong>Speed</strong> sets the fast character speed; <strong>Farns</strong> sets the slower overall pace by stretching the gaps. Try it now:</p>
+    <div class="note">
+      <p>Play this same word twice, changing the sliders between plays. First set <strong>Speed 18 / Farns 18</strong> (no stretching — full speed) and play it. Then set <strong>Speed 18 / Farns 7</strong> and play it again. The <em>letters sound identical</em>; only the space between them changes. That is Farnsworth.</p>
+      <p><button class="say" data-t="PARIS"><span class="tri">▶</span> P A R I S</button></p>
+    </div>
+
+    <h3>Think in sound, never in symbols</h3>
+    <p>From here on, describe letters to yourself the way operators do — as spoken rhythm. Not “dot dash,” but <em>“di-dah.”</em> A dit at the end of a letter is said “<em>dit</em>”; a dit in the middle is said “<em>di</em>”; a dah is always “<em>dah</em>.” So:</p>
+    <ul>
+      <li><b class="m" data-c="A"><span class="lab">A</span></b> = <em>di-dah</em></li>
+      <li><b class="m" data-c="U"><span class="lab">U</span></b> = <em>di-di-dah</em></li>
+      <li><b class="m" data-c="G"><span class="lab">G</span></b> = <em>dah-dah-dit</em></li>
+      <li><b class="m" data-c="C"><span class="lab">C</span></b> = <em>dah-di-dah-dit</em></li>
+    </ul>
+    <p>Say them aloud with a bouncing rhythm. This “vocalizing” bridges your ear and your hand, and it's how generations of operators drilled the code.</p>
+  </section>
+
+  <!-- ============ CH 6 ============ -->
+  <section id="ch6">
+    <div class="h2wrap"><span class="chapno">Chapter Six</span><h2>How to Actually Learn It</h2></div>
+    <p class="lede">A proven method that gets you copying real Morse in weeks, not years.</p>
+
+    <p>Most people who “try Morse code” fail for the same two reasons: they learn it too slowly, and they lean on a chart. This chapter gives you the method that avoids both. It's built on the <strong>Koch method</strong> for building instant recognition and <strong>Farnsworth timing</strong> for pacing — the same combination used by every serious modern course.</p>
+
+    <h3>The Koch method, in one idea</h3>
+    <p>In the 1930s a German psychologist named <strong>Ludwig Koch</strong> ran a simple experiment: instead of teaching the code slowly and speeding up, he taught students the code <em>at full target speed from the very first lesson</em> — but with only <strong>two characters</strong>. The student's whole job was to hear those two fast sounds and tell them apart. When they could copy those two at 90% accuracy, he added a third character. Then a fourth. Each new letter came only after the previous set was solid.</p>
+    <p>Koch's students reached high-speed proficiency in a fraction of the usual time, because they never learned the “counting” habit that has to be unlearned later. <strong>You are not memorizing 40 symbols; you are teaching your ear to recognize sounds, two or three at a time.</strong></p>
+
+    <h3>The five rules of learning that actually works</h3>
+    <ol>
+      <li><strong>Learn by sound only.</strong> Do your character drills with your eyes closed or the screen dark. Never watch the dots and dashes appear. The goal is a reflex from <em>sound</em> to <em>letter</em>, with no picture in between.</li>
+      <li><strong>Start fast, space slow.</strong> Set your character speed to at least <strong>18–20 WPM</strong> from day one, and use Farnsworth (a low overall speed, maybe 5–10 WPM) to give yourself thinking room. As you improve, close the Farnsworth gap — raise the overall speed toward the character speed — rather than raising the character speed.</li>
+      <li><strong>Add characters two at a time.</strong> Begin with a pair, drill until you hit ~90% accuracy over a few minutes, then add the next. A common, ear-friendly order is: <code>K M</code>, then <code>R S</code>, then <code>U A</code>, then <code>P T</code>, then <code>L O</code>, then <code>W I</code>, then <code>. N</code>, then <code>J E</code>, then <code>F 0</code>, then <code>Y V</code>, then <code>G 5</code>, then <code>Q 9</code>, then <code>Z H</code>, then <code>3 8</code>, then <code>B ?</code>, then <code>4 2</code>, then <code>7 C</code>, then <code>1 D</code>, then <code>6 X</code>. (Any Koch-style order works; the point is small increments.)</li>
+      <li><strong>Never stop to decode.</strong> If you miss a character, let it go and stay with the stream — do not freeze and try to reconstruct it, or you'll miss the next three. Missing letters is normal; chasing them is fatal. Copy “behind” by a beat if you can.</li>
+      <li><strong>Short and daily beats long and rare.</strong> Two focused 15-minute sessions a day will take you further than a two-hour cram on the weekend. Morse is a motor-and-hearing skill, like an instrument; it consolidates with sleep and repetition.</li>
+    </ol>
+
+    <div class="note">
+      <span class="tag">Practice right here</span>
+      <p>Use the tool below as a drill machine. Type a few characters from your current Koch set (say <code>KM</code> or <code>RSKM</code>), set Speed to 18 and Farns to 8, then close your eyes and hit play — write down what you hear, then check. Feed it random letters, then short words, then real sentences as you grow.</p>
+    </div>
+
+    <div class="tool">
+      <label for="drill" style="font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:.5rem">Type anything — hear it &amp; see it as Morse</label>
+      <textarea id="drill" placeholder="Type here… e.g. THE QUICK BROWN FOX">CQ CQ DE MORSE</textarea>
+      <div class="row" style="display:flex;gap:.7rem;flex-wrap:wrap">
+        <button class="btn" id="drillPlay">▶ &nbsp;Play</button>
+        <button class="btn ghost" id="drillClear">Clear</button>
+        <button class="btn ghost" id="drillRand">Random letters</button>
+      </div>
+      <div class="preview" id="drillPreview" aria-live="polite"></div>
+    </div>
+
+    <h3>The milestones you're aiming for</h3>
+    <ul>
+      <li><strong>All characters recognized</strong> (usually a few weeks of daily practice): you can copy any single letter or number sent at speed with generous spacing.</li>
+      <li><strong>Words and callsigns</strong>: you start hearing common letter-clusters (<em>TH</em>, <em>ER</em>, <em>ING</em>, and callsign patterns) as chunks, not letters.</li>
+      <li><strong>Head copy</strong>: the real goal. You stop writing letters down and simply <em>understand</em> the Morse as it arrives, the way you understand speech. This clicks somewhere around 15–20 WPM for most people and it feels like magic when it happens.</li>
+    </ul>
+
+    <h3>Breaking through the plateau</h3>
+    <p>Almost everyone stalls somewhere — often right where head copy should begin. The cause is almost always that you're still <em>writing/translating</em> rather than <em>listening</em>. Three fixes reliably break the wall: (1) push your character speed up 3–5 WPM higher than feels comfortable and add Farnsworth spacing to compensate — this forces sound-recognition and kills counting; (2) practice copying without a pencil, letting phrases wash over you; and (3) get on the air (or use recordings of real contacts) so you're copying live human sending, which is more varied and more motivating than a machine.</p>
+  </section>
+
+  <!-- ============ CH 7 ============ -->
+  <section id="ch7">
+    <div class="h2wrap"><span class="chapno">Chapter Seven</span><h2>Prosigns: The Control Keys of Morse</h2></div>
+    <p class="lede">Special signals that punctuate and steer a conversation — like the Enter, Escape, and Backspace of Morse.</p>
+
+    <p>A <strong>prosign</strong> (procedural signal) is two letters sent <em>run together with no gap between them</em>, forming a single new sound that means something about the <em>flow</em> of the transmission rather than spelling a word. Because they're run together, we write them with a bar on top — like <span style="text-decoration:overline;font-family:var(--mono)">AR</span> — to show they're one unit. They're the traffic signals of a Morse conversation: <em>your turn</em>, <em>stand by</em>, <em>new line</em>, <em>I made a mistake</em>, <em>we're done</em>.</p>
+
+    <div class="grid" id="grid-prosign" aria-label="Morse prosigns"></div>
+
+    <div class="note">
+      <span class="tag">The everyday four</span>
+      <p>You can hold a complete contact knowing just these: <strong><span style="text-decoration:overline">K</span></strong> means “go ahead — anyone, your turn.” <strong><span style="text-decoration:overline">AR</span></strong> means “this message is finished.” <strong><span style="text-decoration:overline">SK</span></strong> means “this whole contact is finished; goodbye.” And a run of eight dits <b class="m" data-p="........"></b> means “<strong>error</strong> — disregard that last word, I'll resend it.” If you fumble while sending, just send eight quick dits and start the word over; every operator understands it instantly.</p>
+    </div>
+  </section>
+
+  <!-- ============ CH 8 ============ -->
+  <section id="ch8">
+    <div class="h2wrap"><span class="chapno">Chapter Eight</span><h2>The Operator's Shorthand</h2></div>
+    <p class="lede">Q-codes, abbreviations, and the RST report — the compressed vocabulary that makes Morse fast and international.</p>
+
+    <p>Because sending letter by letter is slow, Morse operators evolved a dense shorthand over 150 years. Two people who share not one word of a spoken language can still have a full, friendly contact entirely in these codes, because the codes mean the same thing to everyone. There are three vocabularies to know: <strong>Q-codes</strong>, common <strong>abbreviations</strong>, and the <strong>RST</strong> signal report. Every row below is playable.</p>
+
+    <h3>Q-codes</h3>
+    <p>Each is three letters starting with Q, and each stands for a whole sentence. Sent as a question or a statement depending on context — <b class="m" data-t="QTH"><span class="lab">QTH</span></b> alone means “my location is…,” while <b class="m" data-t="QTH"><span class="lab">QTH</span></b>&nbsp;<b class="m" data-p="..--.."></b> (with a question mark) means “what is your location?”</p>
+    <div class="tw"><table id="tbl-qcodes"><thead><tr><th>Code</th><th>Meaning</th><th style="width:3.5rem">Hear</th></tr></thead><tbody></tbody></table></div>
+
+    <h3>Everyday abbreviations</h3>
+    <p>These are the words and greetings that fill an ordinary contact. A few have charming origins: <b class="m" data-t="73"><span class="lab">73</span></b> means “best regards” and <b class="m" data-t="88"><span class="lab">88</span></b> means “love and kisses,” both surviving from a numbered telegraph code of the 1800s; and <b class="m" data-t="HI"><span class="lab">HI</span></b> — <em>di-di-di-dit, di-dit</em> — is how you <strong>laugh</strong> in Morse, the sound itself resembling a chuckle.</p>
+    <div class="tw"><table id="tbl-abbr"><thead><tr><th>Abbr.</th><th>Meaning</th><th style="width:3.5rem">Hear</th></tr></thead><tbody></tbody></table></div>
+
+    <h3>The RST report: rating a signal</h3>
+    <p>When two operators meet, they tell each other how well they're being received using a three-part number, <strong>RST</strong>: <strong>R</strong>eadability, <strong>S</strong>trength, and <strong>T</strong>one. Readability runs 1–5, Strength and Tone run 1–9. The famous report <b class="m" data-t="599"><span class="lab">599</span></b> means “perfectly readable, extremely strong, and a pure clean tone” — the Morse equivalent of “loud and clear.”</p>
+    <div class="tw"><table id="tbl-rst"><thead><tr><th>Digit</th><th>Readability (1–5)</th><th>Strength (1–9)</th><th>Tone (1–9)</th></tr></thead><tbody></tbody></table></div>
+    <p class="small">Only the endpoints are shown; the in-between numbers scale smoothly. In practice most operators simply send <strong>599</strong> or <strong>5NN</strong> in fast contacts, and a more honest report like <strong>579</strong> in a relaxed chat.</p>
+  </section>
+
+  <!-- ============ CH 9 ============ -->
+  <section id="ch9">
+    <div class="h2wrap"><span class="chapno">Chapter Nine</span><h2>Sending: Keys and Technique</h2></div>
+    <p class="lede">Making Morse with your own hand — and the tools that shape your “fist.”</p>
+
+    <p>Receiving is a skill of the ear; sending is a skill of the hand. In Morse, your personal sending style is called your <strong>fist</strong>, and experienced operators can recognize a friend by their fist the way you'd recognize a familiar voice. A <em>good</em> fist means clean, correct timing; a poor fist means uneven dahs and ragged spacing that make you hard to read. The good news: the timing rules from Chapter 5 are all you need to send well. The instrument you use is a matter of taste.</p>
+
+    <h3>The straight key</h3>
+    <p>The original and simplest instrument: a spring-loaded lever with a knob. Press down, the circuit closes and a tone sounds; release, it stops. <em>You</em> control the length of every dit and dah and every gap by hand. Technique matters: rest your fingers on the knob with a relaxed wrist, let the motion come from the wrist and forearm rather than a tense finger, and keep the movement small. To make a dit, tap and release quickly; for a dah, hold roughly three times as long. Count the rhythm in your head — <em>“di-dah”</em> — and let the count govern your hand. The straight key is wonderfully direct and is beloved for slow, expressive “ragchew” conversation, but sending fast on one for long periods can strain the wrist.</p>
+
+    <h3>The bug (semi-automatic key)</h3>
+    <p>Invented to save operators' wrists, the <strong>bug</strong> — the classic being the Vibroplex — is worked side to side. Push the paddle one way and a weighted pendulum makes a stream of <em>automatic, evenly timed dits</em>; push the other way and you form <em>dahs by hand</em>. Bugs have a distinctive, slightly swinging rhythm and a devoted following, but they take real practice to tame.</p>
+
+    <h3>The paddle and electronic keyer (today's standard)</h3>
+    <p>Most modern CW operators use a <strong>paddle</strong> connected to an <strong>electronic keyer</strong> (built into nearly every radio). A paddle has two levers: squeeze one and the keyer generates perfectly timed dits for as long as you hold it; squeeze the other and it generates perfect dahs. Because the machine makes every element and gap the correct length, your timing is flawless automatically — you just tap out the <em>pattern</em>, and you can reach high speeds with almost no fatigue.</p>
+    <p>With a dual-lever (“iambic”) paddle you can even squeeze <em>both</em> levers and the keyer alternates dit-dah-dit-dah on its own — handy for letters like <b class="m" data-c="C"><span class="lab">C</span></b> and <b class="m" data-c="K"><span class="lab">K</span></b>. Keyers offer two flavors of this, called <strong>iambic mode A</strong> and <strong>mode B</strong>, which differ only in whether one extra element is sent after you release the squeeze. Beginners needn't worry about the distinction; pick whichever feels natural and be consistent.</p>
+
+    <h3>Sideswiper, keyboards, and software</h3>
+    <p>A few other tools exist: the <strong>sideswiper</strong> (or “cootie”), a single side-to-side lever where you form <em>both</em> dits and dahs by hand — mechanically simple and easy on the wrist. And of course you can send from a <strong>keyboard</strong> or app, where you type and software generates the code; useful for contests or for anyone who can't use a hand key, though many feel it loses the craft.</p>
+
+    <div class="note">
+      <span class="tag">The golden rule of sending</span>
+      <p><strong>Spacing is more important than speed.</strong> A slow message with correct gaps is easy to copy; a fast message with letters mashed together is unreadable. When in doubt, slow down and open up your spacing — especially the gap <em>between letters</em>, which beginners almost always make too short. And never send faster than you can reliably <em>receive</em>, or you'll invite replies you can't copy.</p>
+    </div>
+  </section>
+
+  <!-- ============ CH 10 ============ -->
+  <section id="ch10">
+    <div class="h2wrap"><span class="chapno">Chapter Ten</span><h2>Having a Conversation: The QSO</h2></div>
+    <p class="lede">How two strangers meet on the air and talk — step by step, with a full worked example.</p>
+
+    <p>A two-way contact is called a <strong>QSO</strong> (from the Q-code for “I can communicate with…”). Every QSO follows a friendly, predictable shape, which is a gift to the learner: because you know roughly what's coming next, you can copy it even when your ears aren't yet fast. Let's walk through one.</p>
+
+    <h3>Step 1 — Calling CQ</h3>
+    <p>To invite <em>anyone</em> to talk, you send <strong>CQ</strong> (“seek you” — a general call to all stations), then <strong>DE</strong> (“from”), then your callsign. For example, an operator with the callsign W1ABC calls:</p>
+    <button class="say block" data-t="CQ CQ CQ DE W1ABC W1ABC K"><span class="tri">▶</span> CQ CQ CQ DE W1ABC W1ABC <span style="text-decoration:overline">K</span></button>
+    <p>The <span style="text-decoration:overline">K</span> at the end means “go ahead, any station — over to you.”</p>
+
+    <h3>Step 2 — Answering</h3>
+    <p>Another operator, K9XYZ, hears the call and replies with the caller's callsign, DE, then their own:</p>
+    <button class="say block" data-t="W1ABC DE K9XYZ K9XYZ K"><span class="tri">▶</span> W1ABC DE K9XYZ K9XYZ <span style="text-decoration:overline">K</span></button>
+
+    <h3>Step 3 — The exchange</h3>
+    <p>Now they trade the standard information: a signal report (RST), name, and location (QTH). A typical first turn from W1ABC back to K9XYZ:</p>
+    <button class="say block" data-t="K9XYZ DE W1ABC = GM ES TNX FER CALL = UR RST 599 599 = NAME TOM TOM = QTH BOSTON = HW? K9XYZ DE W1ABC K"><span class="tri">▶</span> K9XYZ DE W1ABC <span style="text-decoration:overline">BT</span> GM ES TNX FER CALL <span style="text-decoration:overline">BT</span> UR RST 599 599 <span style="text-decoration:overline">BT</span> NAME TOM TOM <span style="text-decoration:overline">BT</span> QTH BOSTON <span style="text-decoration:overline">BT</span> HW? K9XYZ DE W1ABC <span style="text-decoration:overline">K</span></button>
+    <p>Reading that in plain English: <em>“Good morning, and thanks for the call. Your signal is 599. My name is Tom, I'm in Boston. How do you copy? Back to you.”</em> The <span style="text-decoration:overline">BT</span> signals (the double-dash) are just pauses separating each thought, like paragraph breaks.</p>
+
+    <h3>Step 4 — Closing</h3>
+    <p>After they've chatted as long as they like, either operator wraps up warmly. A closing might be:</p>
+    <button class="say block" data-t="K9XYZ DE W1ABC = TNX FER FB QSO = 73 ES CUL = W1ABC &lt;SK&gt;"><span class="tri">▶</span> K9XYZ DE W1ABC <span style="text-decoration:overline">BT</span> TNX FER FB QSO <span style="text-decoration:overline">BT</span> 73 ES CUL <span style="text-decoration:overline">BT</span> W1ABC <span style="text-decoration:overline">SK</span></button>
+    <p>That is: <em>“Thanks for the fine contact. Best regards and see you later.”</em> The <span style="text-decoration:overline">SK</span> means the conversation is over.</p>
+
+    <h3>Two kinds of contact</h3>
+    <p>Contacts come in two broad styles. A <strong>ragchew</strong> is a relaxed, open-ended chat — weather, rigs, antennas, life — often on a straight key, and it's where Morse is most fun and most human. A <strong>contest</strong> or “DX” contact is the opposite: lightning-fast and stripped to the essentials (just callsign and report, <b class="m" data-t="599"><span class="lab">599</span></b> and a serial number) so operators can log hundreds of contacts an hour. Both are Morse; they just live at opposite ends of the speed and formality spectrum.</p>
+
+    <h3>Where to find CW, and how to behave</h3>
+    <p>On the ham bands, Morse lives by tradition at the <strong>lower end of each band</strong> — the “CW segment.” Etiquette is simple and kind: before you call CQ on a frequency, ask if it's in use by sending <b class="m" data-t="QRL?"><span class="lab">QRL?</span></b> (“is this frequency busy?”); if someone answers, move along. Match the other operator's speed rather than showing off; if they're slow, slow down. If you need them to send more slowly, send <b class="m" data-t="QRS"><span class="lab">QRS</span></b>; faster, <b class="m" data-t="QRQ"><span class="lab">QRQ</span></b>. And always end on <b class="m" data-t="73"><span class="lab">73</span></b> — the universal sign-off that says, sincerely, “best wishes.”</p>
+  </section>
+
+  <!-- ============ CH 11 ============ -->
+  <section id="ch11">
+    <div class="h2wrap"><span class="chapno">Chapter Eleven</span><h2>Emergencies and the Truth About SOS</h2></div>
+    <p class="lede">The one signal everyone should know — and the myths around it.</p>
+
+    <p>The international distress call is <strong>SOS</strong>, sent as <em>one continuous sequence with no gaps between the letters</em>: <em>di-di-di-dah-dah-dah-di-di-dit</em>. Run together like that, it forms a single unmistakable rhythm that even an untrained listener can pick out through terrible noise — which is precisely why it was chosen in 1906. Sending the letters separately (S — O — S) is technically wrong and less recognizable; the power is in the unbroken pattern.</p>
+
+    <button class="say block" data-t="SOS" data-prosign="1"><span class="tri">▶</span> Play SOS — <span style="text-decoration:overline">SOS</span></button>
+
+    <div class="note warn">
+      <span class="tag">Set the record straight</span>
+      <p>SOS is <strong>not</strong> an abbreviation. It does not stand for “Save Our Souls,” “Save Our Ship,” or anything else — those are memory aids invented after the fact. It was selected only because <em>di-di-di-dah-dah-dah-di-di-dit</em> is simple, symmetric, and impossible to confuse with anything else.</p>
+    </div>
+
+    <h3>Distress beyond the sea</h3>
+    <p>Because SOS needs nothing but a way to make a sound or a light go on and off, it has saved lives far from any radio. Stranded people have flashed it with a mirror or flashlight, tapped it on a pipe, stamped it in snow, or laid it out in rocks on a beach for aircraft to see. If you learn only one sequence in this entire book by heart, make it this one. Three short, three long, three short.</p>
+
+    <p>Alongside SOS, the spoken word “<strong>Mayday</strong>” serves the same purpose on voice radio, and hams use <b class="m" data-t="QRRR"><span class="lab">QRRR</span></b> as a distress signal within the amateur service. But across every mode and every era, SOS remains the one signal the whole world agrees on.</p>
+  </section>
+
+  <!-- ============ CH 12 ============ -->
+  <section id="ch12">
+    <div class="h2wrap"><span class="chapno">Chapter Twelve</span><h2>Morse Beyond Radio</h2></div>
+    <p class="lede">Why a 19th-century code is still quietly everywhere.</p>
+
+    <p>Morse endures because it asks so little of its channel. Any medium that can be reliably switched between two states can carry it, which has led to some remarkable uses:</p>
+    <ul>
+      <li><strong>A voice for the voiceless.</strong> People with conditions that take away speech and fine movement can communicate through Morse with a single input — a sip-and-puff tube, a button under a finger, a muscle twitch, even a deliberate <em>eye blink</em>. Assistive software translates the taps into text and speech. For someone with reliable control of just one action, Morse can be the difference between silence and conversation. In one famous case during the Vietnam War, a captured American officer, filmed by his captors, blinked <strong>T-O-R-T-U-R-E</strong> in Morse to the camera — a message his captors never noticed.</li>
+      <li><strong>Getting through when nothing else can.</strong> A CW signal concentrates all its energy into a razor-thin slice of the radio spectrum, so it can be dug out of noise far below the level where voice becomes unintelligible. This is why Morse remains a favorite for extreme long-distance and very-low-power operating, and why it's a genuine emergency-preparedness skill when infrastructure fails.</li>
+      <li><strong>Hidden in plain sight.</strong> Morse shows up woven into music, film sound design, watch complications, jewelry, and logos — sometimes as a message, sometimes as an homage. Trained ears catch it constantly in the wild.</li>
+      <li><strong>A living hobby and craft.</strong> For hundreds of thousands of amateur operators, CW isn't nostalgia — it's the most rewarding way they know to make a contact: personal, skillful, and quietly meditative, a conversation reduced to pure rhythm.</li>
+    </ul>
+    <p>There's a deeper reason it survives, too. Morse is a beautifully <em>human</em> encoding — invented by counting letters in a print shop, refined by ear over generations, carried in the fists of individual operators each with their own accent. Learning it connects you to that entire lineage. When you finally hear a word instead of a string of beeps, you're doing exactly what an operator in 1900 or 1944 did, with the very same code.</p>
+  </section>
+
+  <!-- ============ CH 13 ============ -->
+  <section id="ch13">
+    <div class="h2wrap"><span class="chapno">Chapter Thirteen</span><h2>Your Practice Plan</h2></div>
+    <p class="lede">A concrete four-week on-ramp, plus where to go next.</p>
+
+    <p>Here is a realistic plan to take you from zero to copying real Morse. It assumes two short daily sessions — one in the morning, one in the evening — of about 15 minutes each. Adjust the pace to your life; consistency matters far more than intensity.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Week</th><th>Goal</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr><td class="k">1</td><td>First sounds</td><td>Set Speed 18, Farns 6–8. Learn characters two at a time using the drill tool above, in the Koch order. Copy by ear with eyes closed; aim for 90% before adding a pair. Expect to reach ~8–10 characters.</td></tr>
+          <tr><td class="k">2</td><td>Full character set</td><td>Continue adding pairs until all 26 letters and 10 numbers are in your ear. Start copying <em>very short</em> random words (3–4 letters). Keep sessions short; don't grind past frustration.</td></tr>
+          <tr><td class="k">3</td><td>Words &amp; the shorthand</td><td>Copy common words and callsign patterns. Learn the everyday abbreviations and the four core prosigns from Chapters 7–8. Begin practicing <em>sending</em> with whatever key you have, watching your spacing.</td></tr>
+          <tr><td class="k">4</td><td>Real contacts</td><td>Start copying full example QSOs (Chapter 10) and real on-air recordings. Begin closing the Farnsworth gap — raise overall speed toward character speed. Aim to have, or listen in on, your first live QSO.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tools and communities to continue with</h3>
+    <ul>
+      <li><strong>Learn CW Online (LCWO.net)</strong> — a free, browser-based Koch trainer that tracks your progress character by character. The standard first stop for self-learners.</li>
+      <li><strong>Code-practice transmissions</strong> — the ARRL's headquarters station, <strong>W1AW</strong>, broadcasts Morse practice at scheduled speeds on published frequencies, with matching text you can check yourself against. Many phone apps do the same on demand.</li>
+      <li><strong>CW clubs and free classes</strong> — the <strong>CW Academy</strong> (run by the CWops group) offers free, structured, mentored courses that take beginners to conversational speed; and clubs like <strong>SKCC</strong> (Straight Key Century Club) and <strong>FISTS</strong> welcome newcomers and run slow, patient contacts specifically so learners can get real-world practice.</li>
+      <li><strong>Just get on the air.</strong> Nothing accelerates learning like a real, forgiving contact. Send <b class="m" data-t="QRS"><span class="lab">QRS</span></b> (“please slow down”) and most operators will happily drop to your pace. Every expert was once exactly where you are, sending shakily and copying half of it — and they remember.</li>
+    </ul>
+
+    <div class="note live">
+      <span class="tag">The one thing to remember</span>
+      <p>You are not memorizing a chart. You are teaching your ear to hear a language. Play sounds every day, keep the characters fast and the spacing generous, never stop to translate, and be patient with the plateaus. Do that, and one ordinary afternoon the beeps will simply turn into words — and they'll stay words for the rest of your life. <strong>73, and welcome to the code.</strong></p>
+    </div>
+  </section>
+
+  <!-- ============ APPENDIX ============ -->
+  <section id="appx">
+    <div class="h2wrap"><span class="chapno">Appendix</span><h2>The Complete Reference</h2></div>
+    <p class="lede">Everything in one place. Every entry is playable.</p>
+
+    <h3>Letters</h3>
+    <div class="grid" id="ref-letters"></div>
+    <h3>Numerals</h3>
+    <div class="grid" id="ref-numbers"></div>
+    <h3>Punctuation &amp; Symbols</h3>
+    <div class="grid" id="ref-punct"></div>
+    <h3>Prosigns (Procedure Signals)</h3>
+    <div class="grid" id="ref-prosign"></div>
+
+    <h3>Q-Codes at a glance</h3>
+    <div class="tw"><table id="ref-qcodes"><thead><tr><th>Code</th><th>Meaning</th><th style="width:3.5rem">Hear</th></tr></thead><tbody></tbody></table></div>
+
+    <h3>Common abbreviations</h3>
+    <div class="tw"><table id="ref-abbr"><thead><tr><th>Abbr.</th><th>Meaning</th><th style="width:3.5rem">Hear</th></tr></thead><tbody></tbody></table></div>
+
+    <h3>Timing summary</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Element</th><th>Units</th></tr></thead>
+      <tbody>
+        <tr><td class="k">dit</td><td>1 unit on</td></tr>
+        <tr><td class="k">dah</td><td>3 units on</td></tr>
+        <tr><td class="k">gap between elements (within a letter)</td><td>1 unit off</td></tr>
+        <tr><td class="k">gap between letters</td><td>3 units off</td></tr>
+        <tr><td class="k">gap between words</td><td>7 units off</td></tr>
+        <tr><td class="k">standard word “PARIS” (with trailing space)</td><td>50 units total</td></tr>
+        <tr><td class="k">dit length</td><td>1200 ÷ WPM milliseconds</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</main>
+
+<footer>
+  HEARING THE CODE · a complete guide to International Morse.<br>
+  Every character, prosign, Q-code, and example message on this page is playable — set your speed in the bar at the top and tap anything.<br>
+  Made for learners: start fast, space slow, listen always. · 73
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   MORSE ENGINE  — encoding + Web Audio playback (verified timing)
+   ============================================================ */
+const MORSE = {
+  A:".-",B:"-...",C:"-.-.",D:"-..",E:".",F:"..-.",G:"--.",H:"....",I:"..",
+  J:".---",K:"-.-",L:".-..",M:"--",N:"-.",O:"---",P:".--.",Q:"--.-",R:".-.",
+  S:"...",T:"-",U:"..-",V:"...-",W:".--",X:"-..-",Y:"-.--",Z:"--..",
+  "0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....",
+  "6":"-....","7":"--...","8":"---..","9":"----.",
+  ".":".-.-.-", ",":"--..--", "?":"..--..", "'":".----.", "!":"-.-.--",
+  "/":"-..-.", "(":"-.--.", ")":"-.--.-", "&":".-...", ":":"---...",
+  ";":"-.-.-.", "=":"-...-", "+":".-.-.", "-":"-....-", "_":"..--.-",
+  '"':".-..-.", "$":"...-..-", "@":".--.-."
+};
+
+/* ---- settings, read live from sliders ---- */
+const S = { wpm:18, eff:10, tone:600, vol:0.22 };
+
+/* ---- audio context (created lazily on first user gesture) ---- */
+let ctx = null;
+function audio(){
+  if(!ctx){ const AC = window.AudioContext||window.webkitAudioContext; ctx = new AC(); }
+  if(ctx.state === "suspended") ctx.resume();
+  return ctx;
+}
+
+/* ---- build on/off timeline (ms) from text, honoring Farnsworth ----
+   A token written as <XX> (e.g. <SK>, <AR>, <BT>) is sent as a single
+   run-together prosign: its letters are concatenated with no gap between them. */
+function timeline(text){
+  const c = S.wpm;
+  let eff = Math.min(S.eff, c);           // effective never exceeds character speed
+  const u = 1200 / c;                     // element unit (ms)
+  let sp = u;                             // spacing unit (ms)
+  if(eff < c){
+    const ta = (60/eff - 37.2/c) * 1000;  // ARRL Farnsworth: total spacing time per standard word
+    sp = ta / 19;
+    if(sp < u) sp = u;
+  }
+  const seq = [];
+  const tokens = String(text).toUpperCase().trim().split(/\s+/).filter(Boolean);
+  tokens.forEach((tok, ti) => {
+    const pros = tok.match(/^<([A-Z0-9]+)>$/);
+    if(pros){
+      // prosign: concatenate the letters' patterns, only 1-unit gaps between elements
+      const pattern = [...pros[1]].filter(ch => MORSE[ch] !== undefined).map(ch => MORSE[ch]).join("");
+      [...pattern].forEach((el, i) => {
+        seq.push({on:true, ms: el === "-" ? 3*u : u});
+        if(i < pattern.length-1) seq.push({on:false, ms: u});
+      });
+    } else {
+      const chars = [...tok].filter(ch => MORSE[ch] !== undefined);
+      chars.forEach((ch, ci) => {
+        const pat = MORSE[ch];
+        [...pat].forEach((el, ei) => {
+          seq.push({on:true, ms: el === "-" ? 3*u : u});
+          if(ei < pat.length-1) seq.push({on:false, ms: u});
+        });
+        if(ci < chars.length-1) seq.push({on:false, ms: 3*sp});
+      });
+    }
+    if(ti < tokens.length-1) seq.push({on:false, ms: 7*sp}); // word gap between tokens
+  });
+  return seq;
+}
+/* prosign timeline: whole string sent as ONE character (no inter-letter gaps) */
+function timelineProsign(text){
+  const c = S.wpm, u = 1200/c;
+  const letters = String(text).toUpperCase().replace(/\s+/g,"").split("").filter(ch=>MORSE[ch]!==undefined);
+  const pattern = letters.map(ch=>MORSE[ch]).join("");
+  const seq = [];
+  [...pattern].forEach((el,i)=>{
+    seq.push({on:true, ms: el==="-"?3*u:u});
+    if(i<pattern.length-1) seq.push({on:false, ms:u});
+  });
+  return seq;
+}
+
+/* ---- playback state / cancellation ---- */
+const lamp = document.getElementById("lamp");
+let play = { token:0, timers:[], osc:null, gain:null, el:null, host:null };
+function stopAll(){
+  play.token++;
+  play.timers.forEach(clearTimeout); play.timers = [];
+  if(play.gain){ try{ play.gain.gain.cancelScheduledValues(ctx.currentTime); play.gain.gain.setValueAtTime(0,ctx.currentTime); }catch(e){} }
+  if(play.osc){ try{ play.osc.stop(); }catch(e){} try{ play.osc.disconnect(); }catch(e){} play.osc=null; }
+  document.querySelectorAll(".playing").forEach(e=>e.classList.remove("playing"));
+  document.querySelectorAll(".glyphs i.lit").forEach(e=>e.classList.remove("lit"));
+  lamp.classList.remove("on");
+  play.el = null; play.host = null;
+}
+
+function playSeq(seq, el, glyphHost){
+  stopAll();
+  if(!seq.length) return;
+  const a = audio();
+  const myToken = play.token;
+  const osc = a.createOscillator();
+  const gain = a.createGain();
+  osc.type = "sine";
+  osc.frequency.value = S.tone;
+  gain.gain.value = 0;
+  osc.connect(gain); gain.connect(a.destination);
+  play.osc = osc; play.gain = gain; play.el = el || null;
+
+  // Glyphs to light in time with the sound: the k-th ON element lights the k-th dit/dah.
+  const host = glyphHost || el || null;
+  const glyphEls = host ? host.querySelectorAll(".glyphs i") : [];
+  play.host = host;
+  let gi = 0;
+
+  const t0 = a.currentTime + 0.06;
+  const R = 0.005; // ramp to avoid key-clicks
+  let t = t0;
+  let msFromNow = 60; // matches the 0.06s audio lead, for visual timers
+  if(el) el.classList.add("playing");
+
+  seq.forEach(seg => {
+    if(seg.on){
+      const on = t, off = t + seg.ms/1000;
+      gain.gain.setValueAtTime(0, Math.max(a.currentTime, on - R));
+      gain.gain.linearRampToValueAtTime(S.vol, on + R);
+      gain.gain.setValueAtTime(S.vol, Math.max(on + R, off - R)); // hold (guard monotonic time)
+      gain.gain.linearRampToValueAtTime(0, off);
+      // synced visuals: lamp + this glyph
+      const onAt = msFromNow, offAt = msFromNow + seg.ms;
+      const g = glyphEls[gi++];
+      play.timers.push(setTimeout(()=>{ if(play.token===myToken){ lamp.classList.add("on"); if(g) g.classList.add("lit"); } }, onAt));
+      play.timers.push(setTimeout(()=>{ if(play.token===myToken){ lamp.classList.remove("on"); if(g) g.classList.remove("lit"); } }, offAt));
+    }
+    t += seg.ms/1000;
+    msFromNow += seg.ms;
+  });
+
+  osc.start(t0);
+  osc.stop(t + 0.05);
+  // cleanup when done
+  play.timers.push(setTimeout(()=>{
+    if(play.token===myToken){
+      if(el) el.classList.remove("playing");
+      lamp.classList.remove("on");
+      if(host) host.querySelectorAll(".glyphs i.lit").forEach(x=>x.classList.remove("lit"));
+      play.el = null; play.host = null;
+    }
+  }, msFromNow + 40));
+}
+
+function playText(text, glyphHost){ playSeq(timeline(text), null, glyphHost); }
+function playOn(el, text, prosign){ playSeq(prosign?timelineProsign(text):timeline(text), el); }
+
+/* ============================================================
+   RENDER HELPERS
+   ============================================================ */
+function glyphsHTML(pattern){
+  let h = '<span class="glyphs">';
+  for(const el of pattern){ h += el === "-" ? '<i class="dah"></i>' : '<i></i>'; }
+  return h + "</span>";
+}
+/* di-dah pronunciation of a pattern */
+function pronounce(pattern){
+  const n = pattern.length;
+  return [...pattern].map((el,i)=>{
+    if(el === "-") return "dah";
+    return (i === n-1) ? "dit" : "di";
+  }).join("-");
+}
+function patternFor(str, prosign){
+  // returns combined pattern string for a text token (letters concatenated; spaces ignored for glyph preview)
+  return String(str).toUpperCase().replace(/\s+/g,"").split("").map(ch=>MORSE[ch]||"").join(prosign?"":" ");
+}
+
+/* ---- build a reference cell ---- */
+function makeCell(ch, opts){
+  opts = opts || {};
+  const pat = opts.pattern || MORSE[ch] || "";
+  const el = document.createElement("button");
+  el.className = "cell";
+  el.type = "button";
+  const over = opts.over ? " over" : "";
+  const disp = opts.display || ch;
+  el.setAttribute("aria-label", (opts.aria||disp) + " — " + pronounce(pat.replace(/ /g,"")));
+  el.innerHTML =
+    '<div class="top"><span class="ch'+over+'">'+escapeHTML(disp)+'</span>'+
+    '<span class="say-txt">'+pronounce(pat.replace(/ /g,""))+'</span></div>'+
+    glyphsHTML(pat.replace(/ /g,"")) +
+    (opts.mean ? '<span class="mean">'+opts.mean+'</span>' : '');
+  el.addEventListener("click", ()=> playOn(el, opts.playText||ch, opts.prosign));
+  return el;
+}
+function escapeHTML(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ---- fill a grid of characters ---- */
+function fillGrid(id, chars){
+  const g = document.getElementById(id); if(!g) return;
+  chars.forEach(ch => g.appendChild(makeCell(ch)));
+}
+
+/* ============================================================
+   DATA: punctuation, prosigns, q-codes, abbreviations, RST
+   ============================================================ */
+const PUNCT = [
+  {ch:".", name:"Period"}, {ch:",", name:"Comma"}, {ch:"?", name:"Question mark"},
+  {ch:"/", name:"Slash"}, {ch:"=", name:"Equals / pause"}, {ch:"+", name:"Plus / end msg"},
+  {ch:"-", name:"Hyphen"}, {ch:"(", name:"Paren open"}, {ch:")", name:"Paren close"},
+  {ch:":", name:"Colon"}, {ch:";", name:"Semicolon"}, {ch:"'", name:"Apostrophe"},
+  {ch:'"', name:"Quotation"}, {ch:"!", name:"Exclamation"}, {ch:"@", name:"At sign"},
+  {ch:"&", name:"Ampersand"}, {ch:"_", name:"Underscore"}, {ch:"$", name:"Dollar"}
+];
+function fillPunct(id){
+  const g = document.getElementById(id); if(!g) return;
+  PUNCT.forEach(p => g.appendChild(makeCell(p.ch, {mean:p.name, aria:p.name})));
+}
+
+const PROSIGNS = [
+  {sig:"AR", pat:".-.-.",     mean:"End of message (“+”)"},
+  {sig:"SK", pat:"...-.-",    mean:"End of contact — goodbye"},
+  {sig:"K",  pat:"-.-",       mean:"Go ahead — over to you (any station)"},
+  {sig:"KN", pat:"-.--.",     mean:"Go ahead — named station only (“(”)"},
+  {sig:"BT", pat:"-...-",     mean:"Pause / new paragraph (“=”)"},
+  {sig:"AS", pat:".-...",     mean:"Wait / stand by"},
+  {sig:"BK", pat:"-...-.-",   mean:"Break — quick hand-back"},
+  {sig:"KA", pat:"-.-.-",     mean:"Attention / start of message"},
+  {sig:"SN", pat:"...-.",     mean:"Understood / verified"},
+  {sig:"CL", pat:"-.-..-..",  mean:"Closing station — going off air"},
+  {sig:"SOS",pat:"...---...", mean:"Distress — sent as one unbroken stream"},
+  {sig:"HH", pat:"........",  mean:"Error — disregard, resending (8 dits)"}
+];
+function fillProsigns(id){
+  const g = document.getElementById(id); if(!g) return;
+  PROSIGNS.forEach(p => g.appendChild(makeCell(p.sig, {
+    pattern:p.pat, display:p.sig, over:true, mean:p.mean,
+    aria:"Prosign "+p.sig, playText:p.sig, prosign:true
+  })));
+}
+
+const QCODES = [
+  ["QTH","My location is… / (with ?) what's your location?"],
+  ["QRZ","Who is calling me?"],
+  ["QRL","Is this frequency in use? / it's busy"],
+  ["QRM","Man-made interference (other signals)"],
+  ["QRN","Natural static / atmospheric noise"],
+  ["QSB","Your signal is fading up and down"],
+  ["QRO","Increase your power"],
+  ["QRP","Reduce power / low-power operating"],
+  ["QRQ","Send faster"],
+  ["QRS","Send slower, please"],
+  ["QRT","Stop sending / I'm going off the air"],
+  ["QRV","I am ready"],
+  ["QRX","Wait / stand by, I'll call you again"],
+  ["QSL","I acknowledge receipt / confirmation card"],
+  ["QSO","A two-way contact / conversation"],
+  ["QSY","Change to another frequency"],
+  ["QTR","The correct time is…"]
+];
+const ABBR = [
+  ["CQ","Calling any station (“seek you”)"],
+  ["DE","“from” (separates the two callsigns)"],
+  ["R","Received — all copied (“roger”)"],
+  ["73","Best regards"],
+  ["88","Love and kisses"],
+  ["OM","Old man (any male operator)"],
+  ["YL","Young lady (female operator)"],
+  ["XYL","Wife"],
+  ["FB","Fine business — great, excellent"],
+  ["HI","Laughter (the Morse “ha-ha”)"],
+  ["ES","and"],
+  ["UR","your / you're"],
+  ["TU","thank you"],
+  ["TNX","thanks"],
+  ["PSE","please"],
+  ["HW?","How do you copy me?"],
+  ["RST","Signal report (Readability-Strength-Tone)"],
+  ["WX","weather"],
+  ["ANT","antenna"],
+  ["RIG","radio equipment"],
+  ["PWR","power"],
+  ["AGN","again"],
+  ["RPT","repeat"],
+  ["CFM","confirm"],
+  ["FER","for"],
+  ["HR","here"],
+  ["NW","now"],
+  ["SRI","sorry"],
+  ["CUL","see you later"],
+  ["GM","good morning"],
+  ["GE","good evening"],
+  ["GN","good night"],
+  ["GL","good luck"],
+  ["VY","very"],
+  ["WKD","worked"],
+  ["NR","number"]
+];
+const RST = [
+  ["1","Unreadable","Barely perceptible","Very rough / hissing"],
+  ["3","Readable with difficulty","Weak","Rough note"],
+  ["5","Perfectly readable (max)","Fairly good","Musical, slight rasp"],
+  ["7","—","Moderately strong","Near-pure tone"],
+  ["9","—","Extremely strong (max)","Pure, perfect tone (max)"]
+];
+
+function fillCodeTable(tableId, rows){
+  const tb = document.querySelector("#"+tableId+" tbody"); if(!tb) return;
+  rows.forEach(([k,meaning]) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td class="k">'+escapeHTML(k)+'</td><td>'+escapeHTML(meaning)+'</td>'+
+                   '<td><button class="rowplay" type="button" aria-label="Play '+escapeHTML(k)+'">▶</button></td>';
+    tr.querySelector(".rowplay").addEventListener("click", ()=> playText(k.replace("?","")+ (k.includes("?")?" ?":"") ));
+    tb.appendChild(tr);
+  });
+}
+function fillRST(id){
+  const tb = document.querySelector("#"+id+" tbody"); if(!tb) return;
+  RST.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = '<td class="k">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   ENHANCE INLINE ELEMENTS (.m playable tokens, .say messages)
+   ============================================================ */
+function enhanceInline(root){
+  (root||document).querySelectorAll(".m").forEach(el=>{
+    if(el.dataset.done) return;
+    const isProsign = el.dataset.prosign === "1";
+    let pattern, playArg;
+    if(el.dataset.p !== undefined){ pattern = el.dataset.p; playArg = null; }
+    else if(el.dataset.c !== undefined){ pattern = MORSE[el.dataset.c.toUpperCase()]||""; playArg = el.dataset.c; }
+    else if(el.dataset.t !== undefined){ pattern = patternFor(el.dataset.t, isProsign); playArg = el.dataset.t; }
+    else return;                       // no data-* → handled elsewhere (e.g. hero word); skip safely
+    el.dataset.done="1";
+    el.insertAdjacentHTML("beforeend", glyphsHTML(pattern.replace(/ /g,"")) ); // glyphs after any label
+    if(!el.hasAttribute("role")) el.setAttribute("role","button");
+    if(!el.hasAttribute("tabindex")) el.setAttribute("tabindex","0");
+    const fire = ()=>{
+      if(el.dataset.p !== undefined){ playSeq(patternSeq(el.dataset.p), el); }
+      else { playOn(el, playArg, isProsign); }
+    };
+    el.addEventListener("click", fire);
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); fire(); }});
+  });
+
+  (root||document).querySelectorAll(".say").forEach(el=>{
+    if(el.dataset.done) return; el.dataset.done="1";
+    const isProsign = el.dataset.prosign === "1";
+    const txt = el.dataset.t;
+    el.setAttribute("role","button");
+    el.setAttribute("tabindex","0");
+    const fire = ()=> playOn(el, txt, isProsign);
+    el.addEventListener("click", fire);
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); fire(); }});
+  });
+}
+/* build a timeline directly from a raw pattern string like ".-" or "...---..." (single char, gaps=1u) */
+function patternSeq(pattern){
+  const u = 1200/S.wpm; const seq=[];
+  [...pattern].forEach((el,i)=>{
+    seq.push({on:true, ms: el==="-"?3*u:u});
+    if(i<pattern.length-1) seq.push({on:false, ms:u});
+  });
+  return seq;
+}
+
+/* ============================================================
+   HERO word + encode/drill tool
+   ============================================================ */
+function buildHeroWord(){
+  const wrap = document.getElementById("heroWord");
+  "HELLO".split("").forEach(ch=>{
+    const b=document.createElement("button");
+    b.className="m"; b.type="button"; b.dataset.done="1"; b.setAttribute("role","button");
+    b.setAttribute("aria-label", ch+" — "+pronounce(MORSE[ch]));
+    b.innerHTML = '<span class="lab">'+ch+'</span>'+glyphsHTML(MORSE[ch]);
+    b.addEventListener("click", ()=> playOn(b, ch));
+    wrap.appendChild(b);
+  });
+}
+
+function renderDrillPreview(){
+  const box = document.getElementById("drillPreview");
+  const text = document.getElementById("drill").value.toUpperCase();
+  box.innerHTML = "";
+  if(!text.trim()){ box.innerHTML='<span style="color:var(--ink-faint);font-family:var(--mono);font-size:.85rem">Nothing to send yet.</span>'; return; }
+  for(const ch of text){
+    if(ch === " "){ const sp=document.createElement("span"); sp.className="cw sp"; box.appendChild(sp); continue; }
+    const cw=document.createElement("span");
+    const pat = MORSE[ch];
+    if(pat){
+      cw.className="cw";
+      cw.innerHTML = glyphsHTML(pat)+'<small>'+escapeHTML(ch)+'</small>';
+    } else {
+      cw.className="cw unk";
+      cw.innerHTML = '<span class="lab" style="font-family:var(--mono)">·?·</span><small>'+escapeHTML(ch)+'</small>';
+    }
+    box.appendChild(cw);
+  }
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+function bindControls(){
+  const wpm=document.getElementById("wpm"), eff=document.getElementById("eff"), tone=document.getElementById("tone");
+  const wpmO=document.getElementById("wpmO"), effO=document.getElementById("effO"), toneO=document.getElementById("toneO");
+  function sync(){
+    S.wpm=+wpm.value; S.eff=+eff.value; S.tone=+tone.value;
+    wpmO.textContent=wpm.value; effO.textContent=eff.value; toneO.textContent=tone.value;
+  }
+  [wpm,eff,tone].forEach(s=> s.addEventListener("input", sync));
+  sync();
+  document.getElementById("stopBtn").addEventListener("click", stopAll);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  bindControls();
+  buildHeroWord();
+
+  // learning-chapter grids
+  fillGrid("grid-letters", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  fillGrid("grid-numbers", "1234567890".split(""));
+  fillPunct("grid-punct");
+  fillProsigns("grid-prosign");
+
+  // appendix grids (rebuilt independently)
+  fillGrid("ref-letters", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  fillGrid("ref-numbers", "1234567890".split(""));
+  fillPunct("ref-punct");
+  fillProsigns("ref-prosign");
+
+  // code tables (chapter 8 + appendix)
+  fillCodeTable("tbl-qcodes", QCODES);
+  fillCodeTable("tbl-abbr", ABBR);
+  fillCodeTable("ref-qcodes", QCODES);
+  fillCodeTable("ref-abbr", ABBR);
+  fillRST("tbl-rst");
+
+  // inline tokens & message buttons
+  enhanceInline(document);
+
+  // hero buttons
+  document.getElementById("heroPlay").addEventListener("click", ()=> playText("HELLO", document.getElementById("heroWord")));
+  document.getElementById("heroSOS").addEventListener("click", ()=> playSeq(timelineProsign("SOS")));
+
+  // drill / encode tool
+  const drill=document.getElementById("drill");
+  renderDrillPreview();
+  drill.addEventListener("input", renderDrillPreview);
+  document.getElementById("drillPlay").addEventListener("click", ()=> playText(drill.value, document.getElementById("drillPreview")));
+  document.getElementById("drillClear").addEventListener("click", ()=>{ drill.value=""; renderDrillPreview(); drill.focus(); });
+  document.getElementById("drillRand").addEventListener("click", ()=>{
+    const L="ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let out=[];
+    for(let g=0; g<4; g++){ let w=""; const n=2+Math.floor(Math.random()*3); for(let i=0;i<n;i++) w+=L[Math.floor(Math.random()*26)]; out.push(w); }
+    drill.value=out.join(" "); renderDrillPreview();
+  });
+
+  // stop audio if user navigates away / hides tab
+  document.addEventListener("visibilitychange", ()=>{ if(document.hidden) stopAll(); });
+});
+</script>
+</body>
+</html>
